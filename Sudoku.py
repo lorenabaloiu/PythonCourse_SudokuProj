@@ -1,3 +1,4 @@
+from PIL import Image, ImageTk
 import tkinter as tk
 import random
 import time
@@ -12,7 +13,7 @@ ERROR_COLOR = "#F44336" #Red
 TIMER_COLOR = "#E0B0FF" #Purple
 TEXT_COLOR = "#333333" #Black
 HIGHLIGHT_COLOR = "#E0B0FF" #Purple
-WIN_COLOR = "#E0B0FF" #Purple
+WIN_COLOR = "#11ed3d" #Green
 GAME_OVER_COLOR = "#F44336" #Red
 BORDER_COLOR = "#2E3B4E" #Deep blue
 USER_COLOR = "#6f20b0" #Purple
@@ -34,6 +35,14 @@ start_time = time.time()
 user_input = {}
 grid = None
 play_again_button = None
+play_again_yes_button = None
+play_again_no_button = None
+win_image = Image.open("happy_raccoon.png")
+lose_image = Image.open("sad_raccoon.jpg")
+win_image = win_image.resize((WIDTH, HEIGHT), Image.Resampling.LANCZOS)
+lose_image = lose_image.resize((WIDTH, HEIGHT), Image.Resampling.LANCZOS)
+win_image_tk = ImageTk.PhotoImage(win_image)
+lose_image_tk = ImageTk.PhotoImage(lose_image)
 
 def generate_grid():
     grid = [[0 for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]
@@ -204,41 +213,52 @@ def disable_game_interaction():
     canvas.unbind("<Button-1>")
     root.after_cancel(update_timer)
 
+def destroy_play_again_buttons():
+    global play_again_yes_button, play_again_no_button
+    if play_again_yes_button:
+        play_again_yes_button.place_forget()
+        play_again_yes_button = None
+    if play_again_no_button:
+        play_again_no_button.place_forget()
+        play_again_no_button = None
+
 def show_win():
-    global play_again_button
+    global play_again_yes_button, play_again_no_button
     canvas.delete("all")
     reset_button.place_forget()
     solve_button.place_forget()
-    canvas.create_rectangle(0, 0, WIDTH, HEIGHT, fill=WIN_COLOR, outline=BLACK)
-    canvas.create_text(WIDTH // 2, HEIGHT // 3, text="You Win!", font=("Arial", 40, "bold"), fill=WHITE)
-    canvas.create_text(WIDTH // 2, HEIGHT // 2, text="Congratulations!", font=("Arial", 30, "bold"), fill=WHITE)
+    if win_image_tk:
+        canvas.create_image(0, 0, anchor="nw", image=win_image_tk)
+    else:
+        canvas.create_rectangle(0, 0, WIDTH, HEIGHT, fill=WIN_COLOR, outline=BLACK)
+    canvas.create_text(WIDTH // 2, HEIGHT // 3, text="You Win!", font=("Arial", 40, "bold"), fill=WIN_COLOR)
     disable_game_interaction()
-    if play_again_button is None:
-        play_again_button = tk.Frame(root, bg=WIN_COLOR)
-        tk.Label(play_again_button, text="Would you like to play again?", font=("Arial", 16), bg=WIN_COLOR,fg=WHITE).pack()
-        button_frame = tk.Frame(play_again_button, bg=WIN_COLOR)
-        tk.Button(button_frame, text="Yes", font=("Arial", 14), bg="#6a2c91", fg=WHITE, command=reset_game).pack(side="left", padx=10)
-        tk.Button(button_frame, text="No", font=("Arial", 14), bg="#6a2c91", fg=WHITE, command=root.quit).pack(side="left", padx=10)
-        button_frame.pack(pady=10)
-        play_again_button.place(relx=0.5, rely=0.7, anchor="center")
+    canvas.create_text(WIDTH // 2, HEIGHT // 2, text="Would you like to play again?", font=("Arial", 16), fill=WIN_COLOR)
+    if not play_again_yes_button:
+        play_again_yes_button = tk.Button(root, text="Yes", font=("Arial", 14), bg="#6a2c91", fg=WHITE, command=lambda: [reset_game(), destroy_play_again_buttons()])
+        play_again_yes_button.place(relx=0.4, rely=0.6, anchor="center")
+    if not play_again_no_button:
+        play_again_no_button = tk.Button(root, text="No", font=("Arial", 14), bg="#6a2c91", fg=WHITE, command=lambda: [root.quit(), destroy_play_again_buttons()])
+        play_again_no_button.place(relx=0.6, rely=0.6, anchor="center")
 
 def show_game_over():
-    global play_again_button
+    global play_again_yes_button, play_again_no_button
     canvas.delete("all")
     reset_button.place_forget()
     solve_button.place_forget()
-    canvas.create_rectangle(0, 0, WIDTH, HEIGHT, fill=GAME_OVER_COLOR, outline=BLACK)
-    canvas.create_text(WIDTH // 2, HEIGHT // 3, text="Game Over!", font=("Arial", 40, "bold"), fill=WHITE)
-    canvas.create_text(WIDTH // 2, HEIGHT // 2, text="You made 3 mistakes.", font=("Arial", 30, "bold"), fill=WHITE)
+    if lose_image_tk:
+        canvas.create_image(0, 0, anchor="nw", image=lose_image_tk)
+    else:
+        canvas.create_rectangle(0, 0, WIDTH, HEIGHT, fill=GAME_OVER_COLOR, outline=BLACK)
+    canvas.create_text(WIDTH // 2, HEIGHT // 3, text="Game Over!", font=("Arial", 40, "bold"), fill=GAME_OVER_COLOR)
     disable_game_interaction()
-    if play_again_button is None:
-        play_again_button = tk.Frame(root, bg=GAME_OVER_COLOR)
-        tk.Label(play_again_button, text="Would you like to play again?", font=("Arial", 16), bg=GAME_OVER_COLOR,fg=WHITE).pack()
-        button_frame = tk.Frame(play_again_button, bg=GAME_OVER_COLOR)
-        tk.Button(button_frame, text="Yes", font=("Arial", 14), bg="#6a2c91", fg=WHITE, command=reset_game).pack(side="left", padx=10)
-        tk.Button(button_frame, text="No", font=("Arial", 14), bg="#6a2c91", fg=WHITE, command=root.quit).pack(side="left", padx=10)
-        button_frame.pack(pady=10)
-        play_again_button.place(relx=0.5, rely=0.7, anchor="center")
+    canvas.create_text(WIDTH // 2, HEIGHT // 2, text="Would you like to play again?", font=("Arial", 16), fill=GAME_OVER_COLOR)
+    if not play_again_yes_button:
+        play_again_yes_button = tk.Button(root, text="Yes", font=("Arial", 14), bg="#6a2c91", fg=WHITE,command=lambda: [reset_game(), destroy_play_again_buttons()])
+        play_again_yes_button.place(relx=0.4, rely=0.6, anchor="center")
+    if not play_again_no_button:
+        play_again_no_button = tk.Button(root, text="No", font=("Arial", 14), bg="#6a2c91", fg=WHITE,command=lambda: [root.quit(), destroy_play_again_buttons()])
+        play_again_no_button.place(relx=0.6, rely=0.6, anchor="center")
 
 def check_win(grid):
     for row in grid:
@@ -305,7 +325,6 @@ def create_reset_button():
     return reset_button
 
 reset_button = create_reset_button()
-
 
 def update_timer(grid):
     global remaining_time
