@@ -1,4 +1,4 @@
-# Sudoku Game README
+# Sudoku Game
 
 This README provides details on how to set up and play the Sudoku game created using Python's Tkinter module.
 
